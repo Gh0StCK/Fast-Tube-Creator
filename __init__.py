@@ -16,7 +16,7 @@ from bpy.types import Operator, Panel
 from bpy.props import FloatProperty
 
 
-class MyPanel(Panel):
+class WM_OT_FTC_MyPanel(Panel):
     bl_label = "Fast Tube Creator"
     bl_idname = "OBJECT_PT_fast_tube_creator_panel"
     bl_space_type = 'VIEW_3D'
@@ -29,7 +29,7 @@ class MyPanel(Panel):
         row = layout.row()
         row.operator("wm.popup_fast_tube_creator", text="Fast Tube Creator")    
 
-class WM_OT_popUp(Operator):
+class WM_OT_FTC_popUp(Operator):
     """Create tube from the mesh"""
     bl_label = "Fast Tube Creator"
     bl_idname = "wm.popup_fast_tube_creator"
@@ -40,11 +40,17 @@ class WM_OT_popUp(Operator):
     
     def execute(self, context):
         
-        obj = bpy.context.active_object
+        obj = context.active_object
         
         #Errors
-        assert obj is not None, "No object selected!!!"
-        assert bpy.context.object.select_get(), "Object has not selected!!!"
+        try:
+            if obj is None:
+                raise Exception("No object selected!!!")
+            if not context.object.select_get():
+                raise Exception("Object has not selected!!!")
+        except Exception as e:
+            self.report({'ERROR'}, str(e))
+            return {'CANCELLED'}
         
         if obj.type == 'MESH':
             bpy.ops.object.convert(target='CURVE')        
@@ -59,13 +65,11 @@ class WM_OT_popUp(Operator):
 
         bpy.ops.object.convert(target='MESH')
         
-        obj = None 
-        
         return{'FINISHED'}
     
 classes = [
-    MyPanel,
-    WM_OT_popUp
+    WM_OT_FTC_MyPanel,
+    WM_OT_FTC_popUp
 ]
 
 def register():
